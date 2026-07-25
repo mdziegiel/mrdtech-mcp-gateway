@@ -1,0 +1,77 @@
+services:
+  docker-mcp-gateway-portainer-ro:
+    image: docker/mcp-gateway:latest
+    container_name: docker-mcp-gateway-portainer-ro
+    restart: unless-stopped
+    command:
+      - "--transport=streaming"
+      - "--host=0.0.0.0"
+      - "--port=8811"
+      - "--static=true"
+      - "--catalog=portainer-readonly.yaml"
+      - "--servers=portainer-readonly"
+      - "--tools=portainer-readonly:list_stacks"
+      - "--tools=portainer-readonly:get_stack_status"
+      - "--tools=portainer-readonly:list_containers"
+      - "--block-secrets"
+      - "--log-calls"
+      # Safe only because the host port is bound to 127.0.0.1 and access is via SSH tunnel.
+      - "--allow-unauthenticated"
+    volumes:
+      # Required by Docker MCP Gateway static mode to inspect/bridge the labeled MCP server container.
+      # The custom Portainer MCP server itself does not receive Docker socket access.
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./gateway/catalog.yaml:/root/.docker/mcp/catalogs/portainer-readonly.yaml:ro
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+      - /root/.docker/mcp:rw,noexec,nosuid,size=16m
+      - /root/.cache:rw,noexec,nosuid,size=16m
+    depends_on:
+      - mcp-portainer-readonly
+    ports:
+      - "127.0.0.1:8811:8811"
+    networks:
+      - mcp_portainer_ro
+
+  mcp-portainer-readonly:
+    build: .
+    image: portainer-readonly-mcp:latest
+    container_name: mcp-portainer-readonly
+    restart: unless-stopped
+    entrypoint: ["/docker-mcp/misc/docker-mcp-bridge", "/app/server.py"]
+    init: true
+    user: "1000:1000"
+    environment:
+      PORTAINER_URL: "https://<gateway-host>:9005"
+      PORTAINER_TLS_VERIFY: "false"
+      PORTAINER_ALLOWED_ENDPOINTS: "2,3"
+      PORTAINER_TOKEN_FILE: "/run/secrets/portainer_api_token"
+    labels:
+      docker-mcp: "true"
+      docker-mcp-tool-type: "mcp"
+      docker-mcp-name: "portainer-readonly"
+      docker-mcp-transport: "stdio"
+    volumes:
+      - ./secrets/portainer_api_token:/run/secrets/portainer_api_token:ro
+      - type: image
+        source: docker/mcp-gateway:latest
+        target: /docker-mcp
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    networks:
+      - mcp_portainer_ro
+
+networks:
+  mcp_portainer_ro:
+    name: mcp_portainer_ro
+    driver: bridge

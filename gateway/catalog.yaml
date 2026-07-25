@@ -1,0 +1,11 @@
+name: portainer-readonly
+registry:
+  portainer-readonly:
+    description: "Minimal Portainer read-only MCP server. GET-only endpoint allowlist."
+    title: "Portainer Read-Only"
+    type: "server"
+    image: "portainer-readonly-mcp:latest"
+    tools:
+      - name: "list_stacks"
+      - name: "get_stack_status"
+      - name: "list_containers"

@@ -1,0 +1,10 @@
+# Runtime secrets and local state
+secrets/
+.env
+*.env
+!*.env.example
+secret.env
+*.log
+__pycache__/
+*.pyc
+.DS_Store
