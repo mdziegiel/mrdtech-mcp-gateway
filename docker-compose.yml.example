@@ -1,76 +1,395 @@
 services:
-  docker-mcp-gateway-portainer-ro:
+  docker-mcp-gateway-mrdtech-ro:
     image: docker/mcp-gateway:latest
-    container_name: docker-mcp-gateway-portainer-ro
+    container_name: docker-mcp-gateway-mrdtech-ro
     restart: unless-stopped
+    environment:
+      MCP_GATEWAY_AUTH_TOKEN_FILE: /run/secrets/gateway_auth_token
     command:
-      - "--transport=streaming"
-      - "--host=0.0.0.0"
-      - "--port=8811"
-      - "--static=true"
-      - "--catalog=portainer-readonly.yaml"
-      - "--servers=portainer-readonly"
-      - "--tools=portainer-readonly:list_stacks"
-      - "--tools=portainer-readonly:get_stack_status"
-      - "--tools=portainer-readonly:list_containers"
-      - "--block-secrets"
-      - "--log-calls"
-      # Safe only because the host port is bound to 127.0.0.1 and access is via SSH tunnel.
-      - "--allow-unauthenticated"
+    - --transport=streaming
+    - --host=0.0.0.0
+    - --port=8811
+    - --static=true
+    - --catalog=mrdtech-mcp-ro.yaml
+    - --servers=portainer-readonly,github-readonly,filesystem-readonly,proxmox-readonly,pbs-readonly
+    - --tools=portainer-readonly:list_stacks
+    - --tools=portainer-readonly:get_stack_status
+    - --tools=portainer-readonly:list_containers
+    - --tools=github-readonly:actions_get
+    - --tools=github-readonly:actions_list
+    - --tools=github-readonly:get_commit
+    - --tools=github-readonly:get_file_contents
+    - --tools=github-readonly:get_job_logs
+    - --tools=github-readonly:get_label
+    - --tools=github-readonly:get_latest_release
+    - --tools=github-readonly:get_me
+    - --tools=github-readonly:get_release_by_tag
+    - --tools=github-readonly:get_tag
+    - --tools=github-readonly:get_team_members
+    - --tools=github-readonly:get_teams
+    - --tools=github-readonly:issue_read
+    - --tools=github-readonly:list_branches
+    - --tools=github-readonly:list_commits
+    - --tools=github-readonly:list_issue_fields
+    - --tools=github-readonly:list_issue_types
+    - --tools=github-readonly:list_issues
+    - --tools=github-readonly:list_pull_requests
+    - --tools=github-readonly:list_releases
+    - --tools=github-readonly:list_repository_collaborators
+    - --tools=github-readonly:list_tags
+    - --tools=github-readonly:pull_request_read
+    - --tools=github-readonly:search_code
+    - --tools=github-readonly:search_commits
+    - --tools=github-readonly:search_issues
+    - --tools=github-readonly:search_pull_requests
+    - --tools=github-readonly:search_repositories
+    - --tools=filesystem-readonly:read_text_file
+    - --tools=filesystem-readonly:read_media_file
+    - --tools=filesystem-readonly:read_multiple_files
+    - --tools=filesystem-readonly:list_directory
+    - --tools=filesystem-readonly:list_directory_with_sizes
+    - --tools=filesystem-readonly:directory_tree
+    - --tools=filesystem-readonly:search_files
+    - --tools=filesystem-readonly:get_file_info
+    - --tools=filesystem-readonly:list_allowed_directories
+    - --tools=proxmox-readonly:list_vms
+    - --tools=proxmox-readonly:get_vm_status
+    - --tools=proxmox-readonly:get_vm_config
+    - --tools=proxmox-readonly:get_vm_pending
+    - --tools=proxmox-readonly:get_vm_feature
+    - --tools=proxmox-readonly:get_vm_rrddata
+    - --tools=proxmox-readonly:list_vm_snapshots
+    - --tools=proxmox-readonly:get_vm_snapshot_config
+    - --tools=proxmox-readonly:get_vm_cloudinit
+    - --tools=proxmox-readonly:vm_agent_exec_status
+    - --tools=proxmox-readonly:vm_agent_file_read
+    - --tools=proxmox-readonly:vm_agent_get_info
+    - --tools=proxmox-readonly:get_container_status
+    - --tools=proxmox-readonly:get_container_config
+    - --tools=proxmox-readonly:get_container_pending
+    - --tools=proxmox-readonly:get_container_interfaces
+    - --tools=proxmox-readonly:get_container_rrddata
+    - --tools=proxmox-readonly:get_container_feature
+    - --tools=proxmox-readonly:list_container_snapshots
+    - --tools=proxmox-readonly:list_storage
+    - --tools=proxmox-readonly:get_storage_config
+    - --tools=proxmox-readonly:list_node_storage
+    - --tools=proxmox-readonly:get_node_storage_status
+    - --tools=proxmox-readonly:list_storage_content
+    - --tools=proxmox-readonly:get_storage_volume_info
+    - --tools=proxmox-readonly:get_storage_rrddata
+    - --tools=proxmox-readonly:list_file_restore
+    - --tools=proxmox-readonly:list_lvm_volumes
+    - --tools=proxmox-readonly:list_lvmthin_pools
+    - --tools=proxmox-readonly:list_zfs_pools
+    - --tools=proxmox-readonly:get_zfs_pool
+    - --tools=proxmox-readonly:list_directory_storage
+    - --tools=proxmox-readonly:list_backup_jobs
+    - --tools=proxmox-readonly:get_backup_job
+    - --tools=proxmox-readonly:get_backup_job_included_volumes
+    - --tools=proxmox-readonly:get_vzdump_defaults
+    - --tools=proxmox-readonly:get_vzdump_extractconfig
+    - --tools=proxmox-readonly:list_backup_file_restore
+    - --tools=proxmox-readonly:list_nodes
+    - --tools=proxmox-readonly:get_node_status
+    - --tools=proxmox-readonly:get_node_config
+    - --tools=proxmox-readonly:get_node_dns
+    - --tools=proxmox-readonly:get_node_network
+    - --tools=proxmox-readonly:get_node_network_interface
+    - --tools=proxmox-readonly:list_node_services
+    - --tools=proxmox-readonly:get_node_syslog
+    - --tools=proxmox-readonly:get_node_journal
+    - --tools=proxmox-readonly:list_node_tasks
+    - --tools=proxmox-readonly:get_task_status
+    - --tools=proxmox-readonly:get_node_time
+    - --tools=proxmox-readonly:get_node_subscription
+    - --tools=proxmox-readonly:get_node_apt_update
+    - --tools=proxmox-readonly:get_node_report
+    - --tools=proxmox-readonly:get_node_disks
+    - --tools=proxmox-readonly:get_disk_smart
+    - --tools=proxmox-readonly:get_node_hardware_pci
+    - --tools=proxmox-readonly:get_node_hardware_usb
+    - --tools=proxmox-readonly:get_node_capabilities_qemu
+    - --tools=proxmox-readonly:get_node_storage_scan
+    - --tools=proxmox-readonly:get_node_hosts
+    - --tools=proxmox-readonly:get_node_version
+    - --tools=proxmox-readonly:get_node_netstat
+    - --tools=proxmox-readonly:get_node_aplinfo
+    - --tools=proxmox-readonly:list_users
+    - --tools=proxmox-readonly:get_user
+    - --tools=proxmox-readonly:list_user_tokens
+    - --tools=proxmox-readonly:get_user_token
+    - --tools=proxmox-readonly:list_groups
+    - --tools=proxmox-readonly:get_group
+    - --tools=proxmox-readonly:list_roles
+    - --tools=proxmox-readonly:get_role
+    - --tools=proxmox-readonly:get_acl
+    - --tools=proxmox-readonly:list_auth_domains
+    - --tools=proxmox-readonly:get_auth_domain
+    - --tools=proxmox-readonly:list_tfa
+    - --tools=proxmox-readonly:get_permissions
+    - --tools=proxmox-readonly:get_version
+    - --tools=proxmox-readonly:get_cluster_status
+    - --tools=proxmox-readonly:get_cluster_resources
+    - --tools=proxmox-readonly:get_cluster_tasks
+    - --tools=proxmox-readonly:get_cluster_log
+    - --tools=proxmox-readonly:get_next_vmid
+    - --tools=proxmox-readonly:get_cluster_options
+    - --tools=proxmox-readonly:get_cluster_config
+    - --tools=proxmox-readonly:get_cluster_config_nodes
+    - --tools=proxmox-readonly:get_cluster_join_info
+    - --tools=proxmox-readonly:get_cluster_totem
+    - --tools=proxmox-readonly:list_replication_jobs
+    - --tools=proxmox-readonly:get_replication_job
+    - --tools=proxmox-readonly:list_metric_servers
+    - --tools=proxmox-readonly:get_metric_server
+    - --tools=proxmox-readonly:list_notification_endpoints
+    - --tools=proxmox-readonly:list_notification_targets
+    - --tools=proxmox-readonly:list_notification_matchers
+    - --tools=proxmox-readonly:get_ceph_status_cluster
+    - --tools=proxmox-readonly:get_ceph_metadata
+    - --tools=proxmox-readonly:get_ceph_flags
+    - --tools=proxmox-readonly:get_ceph_status_node
+    - --tools=proxmox-readonly:list_ceph_osds
+    - --tools=proxmox-readonly:list_ceph_pools
+    - --tools=proxmox-readonly:list_ceph_monitors
+    - --tools=proxmox-readonly:list_ceph_managers
+    - --tools=proxmox-readonly:list_ceph_mds
+    - --tools=proxmox-readonly:list_ceph_fs
+    - --tools=proxmox-readonly:get_ceph_config
+    - --tools=proxmox-readonly:get_ceph_crush_rules
+    - --tools=proxmox-readonly:list_scheduled_jobs
+    - --tools=proxmox-readonly:list_realm_sync_jobs
+    - --tools=proxmox-readonly:list_pci_mappings
+    - --tools=proxmox-readonly:list_usb_mappings
+    - --tools=proxmox-readonly:list_dir_mappings
+    - --tools=proxmox-readonly:get_cluster_firewall_options
+    - --tools=proxmox-readonly:list_cluster_firewall_rules
+    - --tools=proxmox-readonly:get_cluster_firewall_rule
+    - --tools=proxmox-readonly:list_firewall_groups
+    - --tools=proxmox-readonly:get_firewall_group_rules
+    - --tools=proxmox-readonly:list_firewall_aliases
+    - --tools=proxmox-readonly:list_firewall_ipsets
+    - --tools=proxmox-readonly:list_firewall_ipset_entries
+    - --tools=proxmox-readonly:list_firewall_macros
+    - --tools=proxmox-readonly:get_firewall_refs
+    - --tools=proxmox-readonly:get_node_firewall_options
+    - --tools=proxmox-readonly:list_node_firewall_rules
+    - --tools=proxmox-readonly:get_node_firewall_log
+    - --tools=proxmox-readonly:get_vm_firewall_options
+    - --tools=proxmox-readonly:list_vm_firewall_rules
+    - --tools=proxmox-readonly:get_container_firewall_options
+    - --tools=proxmox-readonly:list_container_firewall_rules
+    - --tools=proxmox-readonly:get_ha_status
+    - --tools=proxmox-readonly:get_ha_manager_status
+    - --tools=proxmox-readonly:list_ha_resources
+    - --tools=proxmox-readonly:get_ha_resource
+    - --tools=proxmox-readonly:list_ha_groups
+    - --tools=proxmox-readonly:get_ha_group
+    - --tools=proxmox-readonly:list_pools
+    - --tools=proxmox-readonly:get_pool
+    - --tools=proxmox-readonly:list_acme_accounts
+    - --tools=proxmox-readonly:get_acme_account
+    - --tools=proxmox-readonly:list_acme_plugins
+    - --tools=proxmox-readonly:get_acme_plugin
+    - --tools=proxmox-readonly:get_acme_directories
+    - --tools=proxmox-readonly:get_acme_tos
+    - --tools=proxmox-readonly:get_node_certificates
+    - --tools=proxmox-readonly:list_sdn_vnets
+    - --tools=proxmox-readonly:get_sdn_vnet
+    - --tools=proxmox-readonly:list_sdn_subnets
+    - --tools=proxmox-readonly:list_sdn_zones
+    - --tools=proxmox-readonly:get_sdn_zone
+    - --tools=proxmox-readonly:list_sdn_controllers
+    - --tools=proxmox-readonly:get_sdn_controller
+    - --tools=proxmox-readonly:list_sdn_ipams
+    - --tools=proxmox-readonly:get_sdn_ipam
+    - --tools=proxmox-readonly:list_sdn_dns
+    - --block-secrets
+    - --log-calls
+    - --allow-unauthenticated
+    - --tools=pbs-readonly:list_datastores
+    - --tools=pbs-readonly:get_datastore_status
+    - --tools=pbs-readonly:list_snapshots
+    - --tools=pbs-readonly:get_snapshot_verification_status
+    - --tools=pbs-readonly:get_gc_status
+    - --tools=pbs-readonly:list_gc_tasks
+    - --tools=pbs-readonly:get_task_log
     volumes:
-      # Required by Docker MCP Gateway static mode to inspect/bridge the labeled MCP server container.
-      # The custom Portainer MCP server itself does not receive Docker socket access.
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./gateway/catalog.yaml:/root/.docker/mcp/catalogs/portainer-readonly.yaml:ro
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+    - ./gateway/catalog.yaml:/root/.docker/mcp/catalogs/mrdtech-mcp-ro.yaml:ro
+    - ./secrets/gateway_auth_token:/run/secrets/gateway_auth_token:ro
     read_only: true
     cap_drop:
-      - ALL
+    - ALL
     security_opt:
-      - no-new-privileges:true
+    - no-new-privileges:true
     tmpfs:
-      - /tmp:rw,noexec,nosuid,size=64m
-      - /root/.docker/mcp:rw,noexec,nosuid,size=16m
-      - /root/.cache:rw,noexec,nosuid,size=16m
+    - /tmp:rw,noexec,nosuid,size=64m
+    - /root/.docker/mcp:rw,noexec,nosuid,size=16m
+    - /root/.cache:rw,noexec,nosuid,size=16m
     depends_on:
-      - mcp-portainer-readonly
+    - mcp-portainer-readonly
+    - mcp-github-readonly
+    - mcp-filesystem-readonly
+    - mcp-proxmox-readonly
+    - mcp-pbs-readonly
     ports:
-      - "127.0.0.1:8811:8811"
+    - 127.0.0.1:8811:8811
     networks:
-      - mcp_portainer_ro
-
+    - mcp_portainer_ro
   mcp-portainer-readonly:
-    build: .
-    image: portainer-readonly-mcp:latest
+    image: mrdtech/portainer-readonly-mcp:phase1
     container_name: mcp-portainer-readonly
     restart: unless-stopped
-    entrypoint: ["/docker-mcp/misc/docker-mcp-bridge", "/app/server.py"]
+    entrypoint:
+    - /docker-mcp/misc/docker-mcp-bridge
+    - /app/server.py
     init: true
-    user: "1000:1000"
+    user: 1000:1000
     environment:
-      PORTAINER_URL: "https://<gateway-host>:9005"
-      PORTAINER_TLS_VERIFY: "false"
-      PORTAINER_ALLOWED_ENDPOINTS: "2,3"
-      PORTAINER_TOKEN_FILE: "/run/secrets/portainer_api_token"
+      PORTAINER_URL: https://<PORTAINER_HOST>:9443
+      PORTAINER_TLS_VERIFY: 'false'
+      PORTAINER_ALLOWED_ENDPOINTS: 2,3
+      PORTAINER_TOKEN_FILE: /run/secrets/portainer_api_token
     labels:
-      docker-mcp: "true"
-      docker-mcp-tool-type: "mcp"
-      docker-mcp-name: "portainer-readonly"
-      docker-mcp-transport: "stdio"
+      docker-mcp: 'true'
+      docker-mcp-tool-type: mcp
+      docker-mcp-name: portainer-readonly
+      docker-mcp-transport: stdio
     volumes:
-      - ./secrets/portainer_api_token:/run/secrets/portainer_api_token:ro
-      - type: image
-        source: docker/mcp-gateway:latest
-        target: /docker-mcp
+    - ./secrets/portainer_api_token:/run/secrets/portainer_api_token:ro
+    - type: image
+      source: docker/mcp-gateway:latest
+      target: /docker-mcp
     read_only: true
     cap_drop:
-      - ALL
+    - ALL
     security_opt:
-      - no-new-privileges:true
+    - no-new-privileges:true
     tmpfs:
-      - /tmp:rw,noexec,nosuid,size=64m
+    - /tmp:rw,noexec,nosuid,size=64m
     networks:
-      - mcp_portainer_ro
-
+    - mcp_portainer_ro
+  mcp-github-readonly:
+    image: ghcr.io/github/github-mcp-server:latest
+    container_name: mcp-github-readonly
+    restart: unless-stopped
+    entrypoint:
+    - /docker-mcp/misc/docker-mcp-bridge
+    - /server/github-mcp-server
+    - stdio
+    init: true
+    env_file:
+    - ./secrets/github.env
+    environment:
+      GITHUB_READ_ONLY: '1'
+      GITHUB_TOOLSETS: context,repos,issues,pull_requests,actions
+    labels:
+      docker-mcp: 'true'
+      docker-mcp-tool-type: mcp
+      docker-mcp-name: github-readonly
+      docker-mcp-transport: stdio
+    volumes:
+    - ./secrets/github_pat:/run/secrets/github_pat:ro
+    - type: image
+      source: docker/mcp-gateway:latest
+      target: /docker-mcp
+    read_only: true
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    tmpfs:
+    - /tmp:rw,noexec,nosuid,size=64m
+    networks:
+    - mcp_portainer_ro
+  mcp-filesystem-readonly:
+    image: mrdtech/filesystem-readonly-mcp:phase1
+    container_name: mcp-filesystem-readonly
+    restart: unless-stopped
+    entrypoint:
+    - /docker-mcp/misc/docker-mcp-bridge
+    - mcp-server-filesystem
+    - /projects
+    init: true
+    labels:
+      docker-mcp: 'true'
+      docker-mcp-tool-type: mcp
+      docker-mcp-name: filesystem-readonly
+      docker-mcp-transport: stdio
+    volumes:
+    - /data/compose:/projects:ro
+    - type: image
+      source: docker/mcp-gateway:latest
+      target: /docker-mcp
+    read_only: true
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    tmpfs:
+    - /tmp:rw,noexec,nosuid,size=64m
+    networks:
+    - mcp_portainer_ro
+  mcp-proxmox-readonly:
+    image: mcp/proxmox:latest
+    container_name: mcp-proxmox-readonly
+    restart: unless-stopped
+    entrypoint:
+    - /docker-mcp/misc/docker-mcp-bridge
+    - proxmox-mcp-server
+    init: true
+    env_file:
+    - ./secrets/proxmox.env
+    labels:
+      docker-mcp: 'true'
+      docker-mcp-tool-type: mcp
+      docker-mcp-name: proxmox-readonly
+      docker-mcp-transport: stdio
+    volumes:
+    - type: image
+      source: docker/mcp-gateway:latest
+      target: /docker-mcp
+    read_only: true
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    tmpfs:
+    - /tmp:rw,noexec,nosuid,size=64m
+    networks:
+    - mcp_portainer_ro
+  mcp-pbs-readonly:
+    image: mrdtech/pbs-readonly-mcp:phase1
+    build:
+      context: ./pbs
+    container_name: mcp-pbs-readonly
+    restart: unless-stopped
+    entrypoint:
+    - /docker-mcp/misc/docker-mcp-bridge
+    - /app/server.py
+    init: true
+    env_file:
+    - ./secrets/pbs.env
+    labels:
+      docker-mcp: 'true'
+      docker-mcp-tool-type: mcp
+      docker-mcp-name: pbs-readonly
+      docker-mcp-transport: stdio
+    volumes:
+    - type: image
+      source: docker/mcp-gateway:latest
+      target: /docker-mcp
+    read_only: true
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    tmpfs:
+    - /tmp:rw,noexec,nosuid,size=32m
+    networks:
+    - mcp_portainer_ro
 networks:
   mcp_portainer_ro:
     name: mcp_portainer_ro

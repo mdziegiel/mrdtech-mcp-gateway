@@ -1,11 +1,209 @@
-name: portainer-readonly
+name: mrdtech-mcp-ro
+displayName: MRDTech MCP Read-Only Gateway
 registry:
   portainer-readonly:
-    description: "Minimal Portainer read-only MCP server. GET-only endpoint allowlist."
-    title: "Portainer Read-Only"
-    type: "server"
-    image: "portainer-readonly-mcp:latest"
+    description: MRDTech minimal Portainer read-only MCP server. GET-only endpoint
+      allowlist 2 and 3.
+    title: MRDTech Portainer Read-Only
+    type: server
+    image: mrdtech/portainer-readonly-mcp:phase1
     tools:
-      - name: "list_stacks"
-      - name: "get_stack_status"
-      - name: "list_containers"
+    - name: list_stacks
+    - name: get_stack_status
+  github-readonly:
+    description: Official GitHub MCP server with GITHUB_READ_ONLY=1 and read-only
+      context/repos/issues/pull_requests/actions toolsets.
+    title: GitHub Read-Only
+    type: server
+    image: ghcr.io/github/github-mcp-server:latest
+  filesystem-readonly:
+    description: Official Filesystem MCP server mounted read-only to /data/compose
+      only. Gateway hard-allowlisted read tools.
+    title: Filesystem Read-Only
+    type: server
+    image: mrdtech/filesystem-readonly-mcp:phase1
+    tools:
+    - name: read_text_file
+    - name: read_media_file
+    - name: read_multiple_files
+    - name: list_directory
+    - name: list_directory_with_sizes
+    - name: directory_tree
+    - name: search_files
+    - name: get_file_info
+    - name: list_allowed_directories
+  proxmox-readonly:
+    description: GethosTheWalrus/proxmox-mcp with PVEAuditor token and gateway hard
+      allowlist; proxmox_api_raw excluded.
+    title: Proxmox Read-Only
+    type: server
+    image: mcp/proxmox:latest
+    tools:
+    - name: list_vms
+    - name: get_vm_status
+    - name: get_vm_config
+    - name: get_vm_pending
+    - name: get_vm_feature
+    - name: get_vm_rrddata
+    - name: list_vm_snapshots
+    - name: get_vm_snapshot_config
+    - name: get_vm_cloudinit
+    - name: vm_agent_exec_status
+    - name: vm_agent_file_read
+    - name: vm_agent_get_info
+    - name: list_containers
+    - name: get_container_status
+    - name: get_container_config
+    - name: get_container_pending
+    - name: get_container_interfaces
+    - name: get_container_rrddata
+    - name: get_container_feature
+    - name: list_container_snapshots
+    - name: list_storage
+    - name: get_storage_config
+    - name: list_node_storage
+    - name: get_node_storage_status
+    - name: list_storage_content
+    - name: get_storage_volume_info
+    - name: get_storage_rrddata
+    - name: list_file_restore
+    - name: list_lvm_volumes
+    - name: list_lvmthin_pools
+    - name: list_zfs_pools
+    - name: get_zfs_pool
+    - name: list_directory_storage
+    - name: list_backup_jobs
+    - name: get_backup_job
+    - name: get_backup_job_included_volumes
+    - name: get_vzdump_defaults
+    - name: get_vzdump_extractconfig
+    - name: list_backup_file_restore
+    - name: list_nodes
+    - name: get_node_status
+    - name: get_node_config
+    - name: get_node_dns
+    - name: get_node_network
+    - name: get_node_network_interface
+    - name: list_node_services
+    - name: get_node_syslog
+    - name: get_node_journal
+    - name: list_node_tasks
+    - name: get_task_status
+    - name: get_node_time
+    - name: get_node_subscription
+    - name: get_node_apt_update
+    - name: get_node_report
+    - name: get_node_disks
+    - name: get_disk_smart
+    - name: get_node_hardware_pci
+    - name: get_node_hardware_usb
+    - name: get_node_capabilities_qemu
+    - name: get_node_storage_scan
+    - name: get_node_hosts
+    - name: get_node_version
+    - name: get_node_netstat
+    - name: get_node_aplinfo
+    - name: list_users
+    - name: get_user
+    - name: list_user_tokens
+    - name: get_user_token
+    - name: list_groups
+    - name: get_group
+    - name: list_roles
+    - name: get_role
+    - name: get_acl
+    - name: list_auth_domains
+    - name: get_auth_domain
+    - name: list_tfa
+    - name: get_permissions
+    - name: get_version
+    - name: get_cluster_status
+    - name: get_cluster_resources
+    - name: get_cluster_tasks
+    - name: get_cluster_log
+    - name: get_next_vmid
+    - name: get_cluster_options
+    - name: get_cluster_config
+    - name: get_cluster_config_nodes
+    - name: get_cluster_join_info
+    - name: get_cluster_totem
+    - name: list_replication_jobs
+    - name: get_replication_job
+    - name: list_metric_servers
+    - name: get_metric_server
+    - name: list_notification_endpoints
+    - name: list_notification_targets
+    - name: list_notification_matchers
+    - name: get_ceph_status_cluster
+    - name: get_ceph_metadata
+    - name: get_ceph_flags
+    - name: get_ceph_status_node
+    - name: list_ceph_osds
+    - name: list_ceph_pools
+    - name: list_ceph_monitors
+    - name: list_ceph_managers
+    - name: list_ceph_mds
+    - name: list_ceph_fs
+    - name: get_ceph_config
+    - name: get_ceph_crush_rules
+    - name: list_scheduled_jobs
+    - name: list_realm_sync_jobs
+    - name: list_pci_mappings
+    - name: list_usb_mappings
+    - name: list_dir_mappings
+    - name: get_cluster_firewall_options
+    - name: list_cluster_firewall_rules
+    - name: get_cluster_firewall_rule
+    - name: list_firewall_groups
+    - name: get_firewall_group_rules
+    - name: list_firewall_aliases
+    - name: list_firewall_ipsets
+    - name: list_firewall_ipset_entries
+    - name: list_firewall_macros
+    - name: get_firewall_refs
+    - name: get_node_firewall_options
+    - name: list_node_firewall_rules
+    - name: get_node_firewall_log
+    - name: get_vm_firewall_options
+    - name: list_vm_firewall_rules
+    - name: get_container_firewall_options
+    - name: list_container_firewall_rules
+    - name: get_ha_status
+    - name: get_ha_manager_status
+    - name: list_ha_resources
+    - name: get_ha_resource
+    - name: list_ha_groups
+    - name: get_ha_group
+    - name: list_pools
+    - name: get_pool
+    - name: list_acme_accounts
+    - name: get_acme_account
+    - name: list_acme_plugins
+    - name: get_acme_plugin
+    - name: get_acme_directories
+    - name: get_acme_tos
+    - name: get_node_certificates
+    - name: list_sdn_vnets
+    - name: get_sdn_vnet
+    - name: list_sdn_subnets
+    - name: list_sdn_zones
+    - name: get_sdn_zone
+    - name: list_sdn_controllers
+    - name: get_sdn_controller
+    - name: list_sdn_ipams
+    - name: get_sdn_ipam
+    - name: list_sdn_dns
+  pbs-readonly:
+    description: MRDTech minimal PBS read-only MCP server. GET-only API wrapper; no
+      GC/verify/prune/restore/write tools.
+    title: PBS Read-Only
+    type: server
+    image: mrdtech/pbs-readonly-mcp:phase1
+    tools:
+    - name: list_datastores
+    - name: get_datastore_status
+    - name: list_snapshots
+    - name: get_snapshot_verification_status
+    - name: get_gc_status
+    - name: list_gc_tasks
+    - name: get_task_log

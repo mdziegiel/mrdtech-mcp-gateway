@@ -1,10 +1,14 @@
-# Runtime secrets and local state
-secrets/
-.env
+# runtime and secrets
+secrets/*
+!secrets/README.md
 *.env
-!*.env.example
-secret.env
-*.log
+.env
+*.pem
+*.key
+*.crt
+*.bak*
 __pycache__/
+.pytest_cache/
+.mypy_cache/
 *.pyc
 .DS_Store
