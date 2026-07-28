@@ -11,7 +11,7 @@ services:
     - --port=8811
     - --static=true
     - --catalog=mrdtech-mcp-ro.yaml
-    - --servers=portainer-readonly,github-readonly,filesystem-readonly,proxmox-readonly,pbs-readonly
+    - --servers=portainer-readonly,github-readonly,filesystem-readonly,proxmox-readonly,pbs-readonly,vault-readonly
     - --tools=portainer-readonly:list_stacks
     - --tools=portainer-readonly:get_stack_status
     - --tools=portainer-readonly:list_containers
@@ -205,6 +205,8 @@ services:
     - --tools=proxmox-readonly:list_sdn_ipams
     - --tools=proxmox-readonly:get_sdn_ipam
     - --tools=proxmox-readonly:list_sdn_dns
+    - --tools=vault-readonly:search_vault
+    - --tools=vault-readonly:get_document
     - --block-secrets
     - --log-calls
     - --allow-unauthenticated
@@ -234,6 +236,7 @@ services:
     - mcp-filesystem-readonly
     - mcp-proxmox-readonly
     - mcp-pbs-readonly
+    - mcp-vault-readonly
     ports:
     - 127.0.0.1:8811:8811
     networks:
@@ -376,6 +379,34 @@ services:
       docker-mcp: 'true'
       docker-mcp-tool-type: mcp
       docker-mcp-name: pbs-readonly
+      docker-mcp-transport: stdio
+    volumes:
+    - type: image
+      source: docker/mcp-gateway:latest
+      target: /docker-mcp
+    read_only: true
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    tmpfs:
+    - /tmp:rw,noexec,nosuid,size=32m
+    networks:
+    - mcp_portainer_ro
+  mcp-vault-readonly:
+    image: mrdtech/vault-readonly-mcp:phase1
+    build:
+      context: ./vault
+    container_name: mcp-vault-readonly
+    restart: unless-stopped
+    entrypoint:
+    - /docker-mcp/misc/docker-mcp-bridge
+    - /app/server.py
+    init: true
+    labels:
+      docker-mcp: 'true'
+      docker-mcp-tool-type: mcp
+      docker-mcp-name: vault-readonly
       docker-mcp-transport: stdio
     volumes:
     - type: image

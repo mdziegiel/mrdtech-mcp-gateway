@@ -207,3 +207,13 @@ registry:
     - name: get_gc_status
     - name: list_gc_tasks
     - name: get_task_log
+  vault-readonly:
+    description: MRDTech vault RAG read-only MCP server. Fixed placeholder Ollama
+      embed endpoint and fixed placeholder Qdrant mrdtech_vault search/scroll endpoints
+      only; no write tools, secrets, or filesystem mount.
+    title: MRDTech Vault RAG Read-Only
+    type: server
+    image: mrdtech/vault-readonly-mcp:phase1
+    tools:
+    - name: search_vault
+    - name: get_document

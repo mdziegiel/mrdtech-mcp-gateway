@@ -1,8 +1,8 @@
 # MRDTech MCP Gateway
 
-A Docker MCP Gateway deployment that exposes five read-only MCP servers through one loopback-bound gateway and one SSH tunnel.
+A Docker MCP Gateway deployment that exposes six read-only MCP servers through one loopback-bound gateway and one SSH tunnel.
 
-This repository is a sanitized public template. It intentionally contains no real IP addresses, hostnames, API tokens, GitHub PATs, Portainer tokens, Proxmox tokens, or PBS tokens.
+This repository is a sanitized public template. It intentionally contains no real IP addresses, hostnames, API tokens, GitHub PATs, Portainer tokens, Proxmox tokens, PBS tokens, or vault contents.
 
 ## Architecture
 
@@ -16,6 +16,7 @@ Hermes Agent / MCP client
        -> filesystem-readonly
        -> proxmox-readonly
        -> pbs-readonly
+       -> vault-readonly
 ```
 
 The gateway container binds only to loopback on the Docker host:
@@ -84,6 +85,32 @@ Custom FastMCP server in `pbs/server.py`.
 - PBS token uses `DatastoreAudit` on `/datastore/<store>` and `Audit` on `/system/tasks`.
 - Does not grant `Datastore.Read`, `Datastore.Verify`, `Datastore.Modify`, Admin, or PowerUser.
 
+### Vault RAG
+
+Custom FastMCP server in `vault/server.py`.
+
+- Reuses the existing vault RAG retrieval path: Ollama embeddings and Qdrant collection `mrdtech_vault`.
+- Public template uses placeholder endpoints: `http://<OLLAMA_HOST>:11434/api/embed` and `http://<QDRANT_HOST>:6333/...`.
+- Exposes exactly:
+  - `search_vault`
+  - `get_document`
+- Uses no secrets and mounts no vault filesystem path; `get_document` reconstructs indexed text from Qdrant chunks only.
+- No Qdrant upsert/delete/collection-management tools are registered.
+
+## Tool inventory
+
+Current gateway allowlist contains 202 tools across six servers:
+
+| Server | Tools |
+|---|---:|
+| Portainer | 3 |
+| GitHub | 28 |
+| Filesystem | 9 |
+| Proxmox VE | 153 |
+| Proxmox Backup Server | 7 |
+| Vault RAG | 2 |
+| **Total** | **202** |
+
 ## Security philosophy
 
 The design is defense-in-depth. Gateway filtering alone is not treated as a security boundary because that would be stupid.
@@ -101,9 +128,11 @@ Each backend uses as many layers as the platform allows:
 ```text
 app/server.py                       # Portainer read-only MCP server
 pbs/server.py                       # PBS read-only MCP server
+vault/server.py                     # Vault RAG read-only MCP server
 filesystem/Dockerfile               # Filesystem MCP image wrapper
 Dockerfile.portainer                # Portainer MCP image
 pbs/Dockerfile                      # PBS MCP image
+vault/Dockerfile                    # Vault RAG MCP image
 gateway/catalog.yaml                # Docker MCP Gateway static catalog
 docker-compose.yml.example          # Sanitized compose template
 systemd/mrdtech-mcp-gateway-tunnel.service
@@ -113,7 +142,7 @@ secrets/README.md                   # Secret-file contract, placeholders only
 ## Deployment notes
 
 1. Copy `docker-compose.yml.example` to `docker-compose.yml` on the gateway host.
-2. Replace placeholders such as `<GATEWAY_HOST>`, `<PORTAINER_HOST>`, `<PROXMOX_HOST>`, `<PBS_HOST>`, and `<SSH_USER>`.
+2. Replace placeholders such as `<GATEWAY_HOST>`, `<PORTAINER_HOST>`, `<PROXMOX_HOST>`, `<PBS_HOST>`, `<OLLAMA_HOST>`, `<QDRANT_HOST>`, and `<SSH_USER>`.
 3. Create the secret files described in `secrets/README.md` with mode `0600`.
 4. Start the gateway stack:
 
@@ -130,7 +159,7 @@ docker compose up -d
 Before trusting the deployment:
 
 - `docker compose config` passes.
-- Gateway logs show all intended servers initialized.
+- Gateway logs show all six intended servers initialized.
 - Gateway tool list contains only approved tools for each backend.
 - Calls to destructive tools such as `write_file`, `create_or_update_file`, `proxmox_api_raw`, `run_gc`, and `prune` return `unknown tool`.
 - Filesystem writes fail at the OS layer on read-only mounts.
