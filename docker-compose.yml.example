@@ -4,7 +4,7 @@ services:
     container_name: docker-mcp-gateway-mrdtech-ro
     restart: unless-stopped
     environment:
-      MCP_GATEWAY_AUTH_TOKEN_FILE: /run/secrets/gateway_auth_token
+      MCP_GATEWAY_AUTH_TOKEN: <set-a-long-random-token>
     command:
     - --transport=streaming
     - --host=0.0.0.0
@@ -209,7 +209,6 @@ services:
     - --tools=vault-readonly:get_document
     - --block-secrets
     - --log-calls
-    - --allow-unauthenticated
     - --tools=pbs-readonly:list_datastores
     - --tools=pbs-readonly:get_datastore_status
     - --tools=pbs-readonly:list_snapshots

@@ -1,167 +1,92 @@
-# MRDTech MCP Gateway
+# mrdtech-mcp-gateway
 
-A Docker MCP Gateway deployment that exposes six read-only MCP servers through one loopback-bound gateway and one SSH tunnel.
+Hardened, read-only MCP gateway for MRDTech infrastructure visibility.
 
-This repository is a sanitized public template. It intentionally contains no real IP addresses, hostnames, API tokens, GitHub PATs, Portainer tokens, Proxmox tokens, PBS tokens, or vault contents.
+This project publishes a loopback-only Docker MCP Gateway on the gateway host and exposes six read-only backends to Hermes over a persistent SSH tunnel. The design goal is simple: give the agent visibility without giving it the kind of write access that causes avoidable damage.
 
-## Architecture
+## Current topology
 
 ```text
-Hermes Agent / MCP client
+Hermes on <agent-host>
   -> http://127.0.0.1:18811/mcp
-  -> SSH tunnel to <GATEWAY_HOST>:127.0.0.1:8811
+  -> persistent SSH tunnel
+  -> 127.0.0.1:8811 on <gateway-host>
   -> Docker MCP Gateway
-       -> portainer-readonly
-       -> github-readonly
-       -> filesystem-readonly
-       -> proxmox-readonly
-       -> pbs-readonly
-       -> vault-readonly
+  -> six read-only MCP servers
 ```
 
-The gateway container binds only to loopback on the Docker host:
+## Server inventory
 
-```yaml
-ports:
-  - "127.0.0.1:8811:8811"
-```
+| Server | Tool count | Scope |
+|---|---:|---|
+| `portainer-readonly` | 3 | Portainer stack, stack status, and container inventory visibility |
+| `github-readonly` | 28 | Read-only GitHub context, repositories, issues, pull requests, and Actions visibility |
+| `filesystem-readonly` | 9 | Read-only access to approved filesystem paths |
+| `proxmox-readonly` | 153 | Proxmox VE read/list/get/status visibility |
+| `pbs-readonly` | 7 | Proxmox Backup Server datastore, snapshot, verification, GC, and task-log visibility |
+| `vault-readonly` | 2 | Obsidian vault RAG search and document retrieval |
+| **Total** | **202** | Hard-allowlisted tools behind the gateway |
 
-Clients reach it through a local SSH tunnel, not by exposing the MCP gateway on the LAN or internet.
+## Security model
 
-## Read-only servers
+- Gateway listener is bound to loopback on the gateway host and is reached through SSH local-forwarding only.
+- Credentials live only in gateway-owned secret storage on the gateway host.
+- Hermes connects with HTTP `Authorization: Bearer <token>` headers on all six MCP entries.
+- Docker MCP Gateway hard-allowlists the exact exposed tools; destructive tools are excluded at the gateway layer.
+- Where the platform supports it, read-only service accounts back the MCP layer as additional defense in depth.
+- Filesystem access is mounted read-only and constrained to approved paths.
 
-### Portainer
+## Auth-token enforcement update
 
-Custom FastMCP server in `app/server.py`.
+On **2026-07-30**, the gateway authentication hardening was completed:
 
-- Uses Portainer API through GET-only wrapper logic.
-- Exposes only:
+- `MCP_GATEWAY_AUTH_TOKEN` became the enforced gateway auth variable.
+- `--allow-unauthenticated` was removed from the live gateway deployment.
+- All six Hermes MCP entries were updated to send `Authorization: Bearer <token>`.
+- Unauthenticated requests to the gateway now return `401 Unauthorized`.
+
+## GitHub PAT rotation
+
+On **2026-08-08**, the fine-grained GitHub PAT used by `github-readonly` was rotated with the same read-only scope as before.
+
+Preserved scope:
+
+- selected repositories only
+- repository metadata: read
+- contents: read
+- issues: read
+- pull requests: read
+- actions: read
+
+## Origin
+
+This project was built after the July 2026 Portainer compose-path incident. The entire point is to keep infrastructure visibility available without exposing restart, delete, deploy, or generic write capability to the agent.
+
+## Validation expectations
+
+A healthy deployment should satisfy all of the following:
+
+- local tunnel endpoint on the agent host responds at `http://127.0.0.1:18811/mcp`
+- unauthenticated MCP POSTs receive `401 Unauthorized`
+- authenticated requests succeed with the Bearer token
+- only the intended read-only tool surface is exposed
+- six-server smoke test passes:
   - `list_stacks`
-  - `get_stack_status`
-  - `list_containers`
-- Keeps the Portainer token in `secrets/portainer_api_token` on the gateway host.
-- No Docker proxy write tools are registered.
-
-### GitHub
-
-Uses the official GitHub MCP image.
-
-- Runs with `GITHUB_READ_ONLY=1`.
-- Uses read-only toolsets: `context,repos,issues,pull_requests,actions`.
-- Uses a fine-grained PAT scoped to selected repositories with read-only permissions.
-- PAT lives only in `secrets/github.env` on the gateway host.
-
-### Filesystem
-
-Thin image built from the official filesystem MCP npm package.
-
-- Mounts only approved host paths as read-only.
-- First-pass example mounts compose files as `/projects:ro`.
-- Exposes only read/list/search tools.
-- Blocks write tools at two layers: Docker read-only bind mount and gateway tool allowlist.
-
-### Proxmox VE
-
-Uses `mcp/proxmox:latest` / GethosTheWalrus Proxmox MCP behind a hard gateway allowlist.
-
-- Uses a dedicated Proxmox API token with audit-only privileges.
-- Explicitly excludes `proxmox_api_raw`.
-- Excludes create/update/delete/start/stop/migrate/clone/rollback/RBAC-write tools.
-- Relies on Proxmox RBAC as the real API-level safety boundary, not MCP descriptions.
-
-### Proxmox Backup Server
-
-Custom FastMCP server in `pbs/server.py`.
-
-- Uses PBS REST API with GET-only wrapper logic.
-- Exposes exactly:
+  - `get_me`
+  - `list_allowed_directories`
+  - `get_version`
   - `list_datastores`
-  - `get_datastore_status`
-  - `list_snapshots`
-  - `get_snapshot_verification_status`
-  - `get_gc_status`
-  - `list_gc_tasks`
-  - `get_task_log`
-- PBS token uses `DatastoreAudit` on `/datastore/<store>` and `Audit` on `/system/tasks`.
-- Does not grant `Datastore.Read`, `Datastore.Verify`, `Datastore.Modify`, Admin, or PowerUser.
-
-### Vault RAG
-
-Custom FastMCP server in `vault/server.py`.
-
-- Reuses the existing vault RAG retrieval path: Ollama embeddings and Qdrant collection `mrdtech_vault`.
-- Public template uses placeholder endpoints: `http://<OLLAMA_HOST>:11434/api/embed` and `http://<QDRANT_HOST>:6333/...`.
-- Exposes exactly:
   - `search_vault`
-  - `get_document`
-- Uses no secrets and mounts no vault filesystem path; `get_document` reconstructs indexed text from Qdrant chunks only.
-- No Qdrant upsert/delete/collection-management tools are registered.
 
-## Tool inventory
+## Secret-handling rules
 
-Current gateway allowlist contains 202 tools across six servers:
+Do not commit or publish:
 
-| Server | Tools |
-|---|---:|
-| Portainer | 3 |
-| GitHub | 28 |
-| Filesystem | 9 |
-| Proxmox VE | 153 |
-| Proxmox Backup Server | 7 |
-| Vault RAG | 2 |
-| **Total** | **202** |
+- gateway auth tokens
+- GitHub PATs
+- `.env` files with real values
+- internal hostnames/IPs
+- SSH private keys
+- production-only secret paths
 
-## Security philosophy
-
-The design is defense-in-depth. Gateway filtering alone is not treated as a security boundary because that would be stupid.
-
-Each backend uses as many layers as the platform allows:
-
-1. Credential scoping: dedicated API users/tokens with minimal privileges.
-2. Tool allowlisting: Docker MCP Gateway starts with explicit `--tools=<server>:<tool>` entries.
-3. Client filtering: Hermes uses logical MCP entries with `tools.include` per backend.
-4. OS/API enforcement: read-only bind mounts for filesystem access; RBAC write-denial verification for Proxmox and PBS.
-5. Negative testing: destructive tools are called during verification and must return `unknown tool`, not merely be absent from documentation.
-
-## Repository layout
-
-```text
-app/server.py                       # Portainer read-only MCP server
-pbs/server.py                       # PBS read-only MCP server
-vault/server.py                     # Vault RAG read-only MCP server
-filesystem/Dockerfile               # Filesystem MCP image wrapper
-Dockerfile.portainer                # Portainer MCP image
-pbs/Dockerfile                      # PBS MCP image
-vault/Dockerfile                    # Vault RAG MCP image
-gateway/catalog.yaml                # Docker MCP Gateway static catalog
-docker-compose.yml.example          # Sanitized compose template
-systemd/mrdtech-mcp-gateway-tunnel.service
-secrets/README.md                   # Secret-file contract, placeholders only
-```
-
-## Deployment notes
-
-1. Copy `docker-compose.yml.example` to `docker-compose.yml` on the gateway host.
-2. Replace placeholders such as `<GATEWAY_HOST>`, `<PORTAINER_HOST>`, `<PROXMOX_HOST>`, `<PBS_HOST>`, `<OLLAMA_HOST>`, `<QDRANT_HOST>`, and `<SSH_USER>`.
-3. Create the secret files described in `secrets/README.md` with mode `0600`.
-4. Start the gateway stack:
-
-```bash
-docker compose build
-docker compose up -d
-```
-
-5. Configure a local tunnel using the systemd unit example.
-6. Configure MCP clients to use `http://127.0.0.1:18811/mcp` and filter tools per logical backend.
-
-## Verification checklist
-
-Before trusting the deployment:
-
-- `docker compose config` passes.
-- Gateway logs show all six intended servers initialized.
-- Gateway tool list contains only approved tools for each backend.
-- Calls to destructive tools such as `write_file`, `create_or_update_file`, `proxmox_api_raw`, `run_gc`, and `prune` return `unknown tool`.
-- Filesystem writes fail at the OS layer on read-only mounts.
-- Proxmox and PBS tokens receive HTTP 403 on write-class API calls.
-- Public repo scans show no real IPs, hostnames, usernames, tokens, or secrets.
+This repository intentionally uses placeholders such as `<gateway-host>` and `<agent-host>` where public-safe documentation is sufficient.
