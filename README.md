@@ -31,7 +31,7 @@ Hermes on <agent-host>
 
 - Gateway listener is bound to loopback on the gateway host and is reached through SSH local-forwarding only.
 - Credentials live only in gateway-owned secret storage on the gateway host.
-- Hermes connects with HTTP `Authorization: Bearer <token>` headers on all six MCP entries.
+- Hermes connects with HTTP `Authorization` headers carrying `Bearer <token>` on all six MCP entries.
 - Docker MCP Gateway hard-allowlists the exact exposed tools; destructive tools are excluded at the gateway layer.
 - Where the platform supports it, read-only service accounts back the MCP layer as additional defense in depth.
 - Filesystem access is mounted read-only and constrained to approved paths.
@@ -42,7 +42,7 @@ On **2026-07-30**, the gateway authentication hardening was completed:
 
 - `MCP_GATEWAY_AUTH_TOKEN` became the enforced gateway auth variable.
 - `--allow-unauthenticated` was removed from the live gateway deployment.
-- All six Hermes MCP entries were updated to send `Authorization: Bearer <token>`.
+- All six Hermes MCP entries were updated to send a Bearer token in the HTTP `Authorization` header.
 - Unauthenticated requests to the gateway now return `401 Unauthorized`.
 
 ## GitHub PAT rotation
